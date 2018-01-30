@@ -3,6 +3,8 @@
 Sequel::Elasticsearch allows you to transparently mirror your database, or specific tables, to Elasticsearch. It's especially useful if you want the power of search through Elasticsearch, but keep the sanity and structure of a relational database.
 
 [![Build Status](https://travis-ci.org/jrgns/sequel-elasticsearch.svg?branch=master)](https://travis-ci.org/jrgns/sequel-elasticsearch)
+[![Maintainability](https://api.codeclimate.com/v1/badges/ff453fe81303a2fa7c02/maintainability)](https://codeclimate.com/github/jrgns/sequel-elasticsearch/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/ff453fe81303a2fa7c02/test_coverage)](https://codeclimate.com/github/jrgns/sequel-elasticsearch/test_coverage)
 
 ## Installation
 
