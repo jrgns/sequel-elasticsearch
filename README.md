@@ -66,7 +66,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/jrgns/
 
 Features that needs to be built:
 
-- [ ] Asyncronous workers so that the updates can be processed in the background.
+- [ ] Asynchronous workers so that the updates can be processed in the background.
 - [ ] An `es` method to search through the data on the cluster.
 - [ ] A rake task to create or suggest mappings for a table.
 
