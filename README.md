@@ -1,8 +1,8 @@
 # Sequel::Elasticsearch
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/sequel/elasticsearch`. To experiment with that code, run `bin/console` for an interactive prompt.
+Sequel::Elasticsearch allows you to transparently mirror your database, or specific tables, to Elasticsearch. It's especially useful if you want the power of search through Elasticsearch, but keep the sanity and structure of a relational database.
 
-TODO: Delete this and the text above, and describe your gem
+[![Build Status](https://travis-ci.org/jrgns/sequel-elasticsearch.svg?branch=master)](https://travis-ci.org/jrgns/sequel-elasticsearch)
 
 ## Installation
 
@@ -22,7 +22,37 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+You firstly need an Elasticsearch cluster to sync your data to. By default the gem will try to connect to `http://localhost:9200`. Set the `ELASTICSEARCH_URL` ENV variable to the URL of your cluster.
+
+This is a Sequel plugin, so you can enable it DB wide:
+
+```ruby
+Sequel::Model.plugin :elasticsearch
+
+```
+
+Or per model:
+
+```ruby
+Sequel::Model.plugin Sequel::Elasticsearch
+
+# or
+
+class Node < Sequel::Model
+  plugin :elasticsearch
+end
+```
+
+There's a couple of options you can set:
+
+```ruby
+Sequel::Model.plugin :elasticsearch,
+  elasticsearch: { log: true }, # Options to pass the the Elasticsearch ruby client
+  index: 'all-my-data', # The index in which the data should be stored. Defaults to the table name associated with the model
+  type: 'is-mine' # The type in which the data should be stored.
+```
+
+And that's it! Just transact as you normally would, and your records will be created and updated in the Elasticsearch cluster.
 
 ## Development
 
@@ -32,8 +62,13 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/sequel-elasticsearch.
+Bug reports and pull requests are welcome on GitHub at https://github.com/jrgns/sequel-elasticsearch.
 
+Features that needs to be built:
+
+- [ ] Asyncronous workers so that the updates can be processed in the background.
+- [ ] An `es` method to search through the data on the cluster.
+- [ ] A rake task to create or suggest mappings for a table.
 
 ## License
 
