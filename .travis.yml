@@ -7,7 +7,7 @@ rvm:
 gemfile: Gemfile.ci
 env:
   global:
-    - CC_TEST_REPORTER_ID=787a2f89b15c637323c7340d65ec17e898ac44480706b4b4122ea040c2a88f1d
+    - CC_TEST_REPORTER_ID=f35fd15664b071c621a239733eb3b063caf333ac7e795d3a20690942f64caf62
 before_install:
   - gem install bundler -v 1.13.6
 before_script:
