@@ -5,4 +5,24 @@ rvm:
   - 2.4.3
   - 2.5.0
 gemfile: Gemfile.ci
-before_install: gem install bundler -v 1.13.6
+env:
+  global:
+    - CC_TEST_REPORTER_ID=787a2f89b15c637323c7340d65ec17e898ac44480706b4b4122ea040c2a88f1d
+before_install:
+  - gem install bundler -v 1.13.6
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+deploy:
+  provider: rubygems
+  api_key:
+    secure: WDO/FSVmUxyz8U6LJyoEEA/Gorw90VbQ8Q4rAu9+L6Lru/PftaVUlcW3ZMATjASHcVX/1KjVJlZNilgMYrV0eayudkeNjWglBozw5FxnhJntgzZAH2Fo/aepF9NHSU29A4SGtl1W0kj8zez9prYn+qcdX/8ei9YMfnP8KkQCKEUeO3/jScHqSZlYZIFI7Ft+QQbJeUTlKc1sJRC5XHG9Oz4lFfSZY0XgZMd5IJsBmwNCGisqgKxBuDEG/9KWwhqops6K6XGPvuhxd8+DFFrDSrI3HR1NsP9RrQxwFc9TnIc+Rzu/FjSF44NJgaiFKKPdZ116w5ChnpY0B59tzOyh/aCwvAl2w7usIqNkhXey0eJ/MZm4S+7l1AoVlxYVujBBl/tRt8PeqlRqjJWAnr1mu/p74cS/jyXhZbHJpNvmv5M7YJzzFIYI12el4Wm05fPo2L605g0c7+pFCW3F+HPAp5qItrjlNx3HoMNNoGDQO+057g3OeVjOivV5Vxjp9IYwZmNCD35IaLFXk+umYD4Jw047rUSGoboc0i/5k6ZYHSBrvIivvRCZNAXSbGi1nLR/lv42Chu2wRCWzMjyPgQQ4I0xGlVwu8kfIQsvPVAM3szNczl9xY8S311eBJforo5prPr6wLaEile0KLmMOai+1n0sr+exy056Z7ttBjwIwoQ=
+  gem: sequel-elasticsearch
+  on:
+    tags: true
+    repo: EagerELK/proxes
+after_success:
+  - bundle exec codeclimate-test-reporter
