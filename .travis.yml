@@ -1,28 +1,29 @@
 sudo: false
 language: ruby
 rvm:
-  - 2.3.6
-  - 2.4.3
-  - 2.5.0
+- 2.3.6
+- 2.4.3
+- 2.5.0
 gemfile: Gemfile.ci
 env:
   global:
-    - CC_TEST_REPORTER_ID=f35fd15664b071c621a239733eb3b063caf333ac7e795d3a20690942f64caf62
+  - CC_TEST_REPORTER_ID=f35fd15664b071c621a239733eb3b063caf333ac7e795d3a20690942f64caf62
 before_install:
-  - gem install bundler -v 1.13.6
+- gem install bundler -v 1.13.6
 before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
+- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
+  > ./cc-test-reporter
+- chmod +x ./cc-test-reporter
+- "./cc-test-reporter before-build"
 after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+- "./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT"
 deploy:
   provider: rubygems
-  api_key:
-    secure: WDO/FSVmUxyz8U6LJyoEEA/Gorw90VbQ8Q4rAu9+L6Lru/PftaVUlcW3ZMATjASHcVX/1KjVJlZNilgMYrV0eayudkeNjWglBozw5FxnhJntgzZAH2Fo/aepF9NHSU29A4SGtl1W0kj8zez9prYn+qcdX/8ei9YMfnP8KkQCKEUeO3/jScHqSZlYZIFI7Ft+QQbJeUTlKc1sJRC5XHG9Oz4lFfSZY0XgZMd5IJsBmwNCGisqgKxBuDEG/9KWwhqops6K6XGPvuhxd8+DFFrDSrI3HR1NsP9RrQxwFc9TnIc+Rzu/FjSF44NJgaiFKKPdZ116w5ChnpY0B59tzOyh/aCwvAl2w7usIqNkhXey0eJ/MZm4S+7l1AoVlxYVujBBl/tRt8PeqlRqjJWAnr1mu/p74cS/jyXhZbHJpNvmv5M7YJzzFIYI12el4Wm05fPo2L605g0c7+pFCW3F+HPAp5qItrjlNx3HoMNNoGDQO+057g3OeVjOivV5Vxjp9IYwZmNCD35IaLFXk+umYD4Jw047rUSGoboc0i/5k6ZYHSBrvIivvRCZNAXSbGi1nLR/lv42Chu2wRCWzMjyPgQQ4I0xGlVwu8kfIQsvPVAM3szNczl9xY8S311eBJforo5prPr6wLaEile0KLmMOai+1n0sr+exy056Z7ttBjwIwoQ=
   gem: sequel-elasticsearch
   on:
     tags: true
     repo: jrgns/sequel-elasticsearch
+  api_key:
+    secure: xP8zLfBbDTTUpJP8DUL9llfGIGwuTkifmySfoTo7YHOoEC9hFhviT2+PdeoTLywjAIsIwjvghzB2rBERcAPkbu1ahVow9+/0n3jV4UmgRNm2bFcAlIEb8j2gSUlK/ETrIXRBUTUnMg60qhaxIIPd5VQY4eOv2EbmujUqfJgN6xJTTQkiuN4G/UK6Cbhi9d1YDcviY/un9XKIRZQuUvkHQ9vBpK2xJEmisymg0ljK/uj9/dAjKUtyZ7c3QKjcTcQeZ/YKxkKuwaTO5TyHTfKkzUS6M9wS280zbHj3KS98xYX1NTGqDTlq1YPPKAtedhh1+xiCoT50BcIFHmOAymTfvMeGrRQp4fxGOaLMV3q9hP91PAY/Eul3B4gJrAulDahc5xy4TECvM+GdIitNHWpXchH3iE70vWybjFFOTRrf4ftjh20BbeaGJG2FVLD4haC8Y73B6Q8Yf2/qu9Wc+vyXkCXRwiGBl+x1N1gmRoF2w5jyMfEnAJ/7wN4sTcLRvN8PViOKbZ9cNyjgsdwoJoqcH045HJhyRALl5pXeoTANzyPw7Dm2yGyzw2Rnv3TqJD4eeJr8dQyQgR83P7yl/GDrG493QY0Mkl8iMEmS/GFTX6L4p7qqiJqDYBtIuW4/XET2Ui7HrV/5midzTiC5nGNZdHkQkLNMlkIvaSpROXV058I=
 after_success:
-  - bundle exec codeclimate-test-reporter
+- bundle exec codeclimate-test-reporter
