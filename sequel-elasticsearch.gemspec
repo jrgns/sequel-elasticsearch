@@ -1,4 +1,4 @@
-# coding: utf-8
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'sequel/plugins/elasticsearch/version'
@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Jurgens du Toit']
   spec.email         = ['jrgns@jadeit.co.za']
 
-  spec.summary       = %q{A plugin for the Sequel gem to sync data to Elasticsearch.}
-  spec.description   = %q{A plugin for the Sequel gem to sync data to Elasticsearch.}
+  spec.summary       = 'A plugin for the Sequel gem to sync data to Elasticsearch.'
+  spec.description   = 'A plugin for the Sequel gem to sync data to Elasticsearch.'
   spec.homepage      = 'https://github.com/jrgns/sequel-elasticsearch'
   spec.license       = 'MIT'
 
@@ -21,8 +21,8 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'sequel', '~> 5.4'
   spec.add_dependency 'elasticsearch', '~> 6.0'
+  spec.add_dependency 'sequel', '~> 5.4'
 
   spec.add_development_dependency 'bundler', '~> 1.13'
   spec.add_development_dependency 'rake', '~> 10.0'

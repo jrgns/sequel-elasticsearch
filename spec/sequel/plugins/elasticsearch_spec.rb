@@ -12,15 +12,15 @@ describe Sequel::Plugins::Elasticsearch do
     DB.create_table!(:complex_documents) do
       Integer :one
       Integer :two
-      primary_key [:one, :two]
+      primary_key %i[one two]
       String :title
       String :content, text: true
     end
   end
 
-  let(:subject) {
+  let(:subject) do
     Class.new(Sequel::Model(:documents))
-  }
+  end
 
   context '.configure' do
     it 'defaults to the model table name for the index' do
@@ -35,7 +35,7 @@ describe Sequel::Plugins::Elasticsearch do
 
     it 'uses the specified index' do
       subject.plugin :elasticsearch, index: :customIndex
-      stub_request(:put, /http:\/\/localhost:9200\/customIndex\/sync\/\d+/)
+      stub_request(:put, %r{http://localhost:9200/customIndex/sync/\d+})
       doc = subject.new.save
       expect(WebMock).to have_requested(:put, "http://localhost:9200/customIndex/sync/#{doc.id}")
     end
@@ -52,7 +52,7 @@ describe Sequel::Plugins::Elasticsearch do
 
     it 'uses the specified type' do
       subject.plugin :elasticsearch, type: :customType
-      stub_request(:put, /http:\/\/localhost:9200\/#{subject.table_name}\/customType\/\d+/)
+      stub_request(:put, %r{http://localhost:9200/#{subject.table_name}/customType/\d+})
       doc = subject.new.save
       expect(WebMock).to have_requested(:put, "http://localhost:9200/#{subject.table_name}/customType/#{doc.id}")
     end
@@ -88,7 +88,7 @@ describe Sequel::Plugins::Elasticsearch do
 
     context '#document_id' do
       it 'returns the value of the primary key for simple primary keys' do
-        stub_request(:put, /http:\/\/localhost:9200\/documents\/sync\/\d+/)
+        stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
         doc = simple_doc.new.save
         expect(doc.send(:document_id)).to eq doc.id
       end
@@ -102,7 +102,7 @@ describe Sequel::Plugins::Elasticsearch do
 
     context '#document_path' do
       it 'returns the document index, type and id for documents' do
-        stub_request(:put, /http:\/\/localhost:9200\/documents\/sync\/\d+/)
+        stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
         doc = simple_doc.new.save
         expect(doc.send(:document_path)).to include index: simple_doc.table_name
         expect(doc.send(:document_path)).to include type: :sync
@@ -112,30 +112,34 @@ describe Sequel::Plugins::Elasticsearch do
 
     context '#save' do
       it 'indexes the document using the document path and model values' do
-        stub_request(:put, /http:\/\/localhost:9200\/documents\/sync\/\d+/)
+        stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
         doc = simple_doc.new.save
-        expect(WebMock).to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
+        expect(WebMock)
+          .to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
       end
     end
 
     context '#update' do
       it 'indexes the document using the document path and model values' do
-        stub_request(:put, /http:\/\/localhost:9200\/documents\/sync\/\d+/)
+        stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
         doc = simple_doc.new.save
         doc.title = 'updated'
         doc.save
-        expect(WebMock).to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}").times(2)
+        expect(WebMock)
+          .to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
+          .times(2)
       end
     end
 
     context '#destroy' do
       it 'destroys the document using the document path' do
-        stub_request(:put, /http:\/\/localhost:9200\/documents\/sync\/\d+/)
-        stub_request(:delete, /http:\/\/localhost:9200\/documents\/sync\/\d+/)
+        stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
+        stub_request(:delete, %r{http://localhost:9200/documents/sync/\d+})
         doc = simple_doc.new.save
         id = doc.pk
         doc.destroy
-        expect(WebMock).to have_requested(:delete, "http://localhost:9200/#{simple_doc.table_name}/sync/#{id}")
+        expect(WebMock)
+          .to have_requested(:delete, "http://localhost:9200/#{simple_doc.table_name}/sync/#{id}")
       end
     end
   end
