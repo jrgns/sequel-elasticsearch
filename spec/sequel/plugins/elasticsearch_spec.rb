@@ -80,6 +80,23 @@ describe Sequel::Plugins::Elasticsearch do
       end
     end
 
+    context '#es' do
+      it 'does a basic query string search' do
+        stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
+        subject.plugin :elasticsearch
+        subject.new.es('test')
+        expect(WebMock).to have_requested(:get, 'http://localhost:9200/documents/sync/_search?q=test')
+      end
+
+      it 'does a complex query search' do
+        stub = stub_request(:get, 'http://localhost:9200/documents/sync/_search')
+               .with(body: '{"query":{"match":{"title":"test"}}}')
+        subject.plugin :elasticsearch
+        subject.new.es(query: { match: { title: 'test' } })
+        expect(stub).to have_been_requested.once
+      end
+    end
+
     context '#es_client' do
       it 'returns an Elasticsearch Transport Client' do
         expect(simple_doc.new.send(:es_client)).to be_a Elasticsearch::Transport::Client

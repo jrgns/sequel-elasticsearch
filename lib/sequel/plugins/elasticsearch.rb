@@ -22,6 +22,15 @@ module Sequel
       end
 
       module InstanceMethods
+        def es(query = '')
+          opts = {
+            index: self.class.elasticsearch_index,
+            type: self.class.elasticsearch_type
+          }
+          query.is_a?(String) ? opts[:q] = query : opts[:body] = query
+          es_client.search opts
+        end
+
         def after_create
           super
           index_document
