@@ -7,12 +7,14 @@ module Sequel
         model.instance_variable_set(:@elasticsearch_opts, {})
         model.instance_variable_set(:@elasticsearch_index, nil)
         model.instance_variable_set(:@elasticsearch_type, 'sync')
+        model
       end
 
       def self.configure(model, opts=OPTS)
         model.elasticsearch_opts = opts[:elasticsearch] || {}
-        model.elasticsearch_index = opts[:index] || model.table_name
-        model.elasticsearch_type = opts[:type] || 'sync'
+        model.elasticsearch_index = (opts[:index] || model.table_name).to_sym
+        model.elasticsearch_type = (opts[:type] || :sync).to_sym
+        model
       end
 
       module ClassMethods
@@ -35,11 +37,11 @@ module Sequel
           index_document
         end
 
-        private
-
         def es_client
           @es_client = ::Elasticsearch::Client.new self.class.elasticsearch_opts
         end
+
+        private
 
         def document_id
           doc_id = pk
@@ -49,7 +51,7 @@ module Sequel
 
         def document_path
           {
-            index: self.class.table_name,
+            index: self.class.elasticsearch_index,
             type: self.class.elasticsearch_type,
             id: document_id
           }
