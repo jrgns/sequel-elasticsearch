@@ -30,7 +30,12 @@ module Sequel
             type: elasticsearch_type
           }.merge(opts)
           query.is_a?(String) ? opts[:q] = query : opts[:body] = query
-          es_client.search opts
+          enumerate es_client.search(opts)
+        end
+
+        def enumerate(results)
+          return [] if results['hits']['total'] == 0
+          results['hits']['hits'].map { |h| self.call h['_source'] }
         end
 
         def es(query = '', opts = {})
