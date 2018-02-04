@@ -63,6 +63,41 @@ describe Sequel::Plugins::Elasticsearch do
     end
   end
 
+  context 'ClassMethods' do
+    context '.es' do
+      it 'does a basic query string search' do
+        stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
+        subject.plugin :elasticsearch
+        subject.es('test')
+        expect(WebMock).to have_requested(:get, 'http://localhost:9200/documents/sync/_search?q=test')
+      end
+
+      it 'does a complex query search' do
+        stub = stub_request(:get, 'http://localhost:9200/documents/sync/_search')
+               .with(body: '{"query":{"match":{"title":"test"}}}')
+        subject.plugin :elasticsearch
+        subject.es(query: { match: { title: 'test' } })
+        expect(stub).to have_been_requested.once
+      end
+
+      it 'handles exceptions' do
+        stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
+          .to_return(status: 404)
+        subject.plugin :elasticsearch
+        expect { subject.es('test') }.to_not raise_error
+      end
+    end
+
+    context '.es!' do
+      it 'does not handle exceptions' do
+        stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
+          .to_return(status: 500)
+        subject.plugin :elasticsearch
+        expect { subject.es!('test') }.to raise_error Elasticsearch::Transport::Transport::Error
+      end
+    end
+  end
+
   context 'InstanceMethods' do
     let(:simple_doc) do
       @subj ||= begin
@@ -77,23 +112,6 @@ describe Sequel::Plugins::Elasticsearch do
         subj = Class.new(Sequel::Model(:complex_documents))
         subj.plugin :elasticsearch
         subj
-      end
-    end
-
-    context '#es' do
-      it 'does a basic query string search' do
-        stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
-        subject.plugin :elasticsearch
-        subject.new.es('test')
-        expect(WebMock).to have_requested(:get, 'http://localhost:9200/documents/sync/_search?q=test')
-      end
-
-      it 'does a complex query search' do
-        stub = stub_request(:get, 'http://localhost:9200/documents/sync/_search')
-               .with(body: '{"query":{"match":{"title":"test"}}}')
-        subject.plugin :elasticsearch
-        subject.new.es(query: { match: { title: 'test' } })
-        expect(stub).to have_been_requested.once
       end
     end
 

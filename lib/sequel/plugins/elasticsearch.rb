@@ -19,35 +19,53 @@ module Sequel
 
       module ClassMethods
         attr_accessor :elasticsearch_opts, :elasticsearch_index, :elasticsearch_type
-      end
 
-      module InstanceMethods
-        def es(query = '')
+        def es_client
+          @es_client = ::Elasticsearch::Client.new elasticsearch_opts
+        end
+
+        def es!(query = '', opts = {})
           opts = {
-            index: self.class.elasticsearch_index,
-            type: self.class.elasticsearch_type
-          }
+            index: elasticsearch_index,
+            type: elasticsearch_type
+          }.merge(opts)
           query.is_a?(String) ? opts[:q] = query : opts[:body] = query
           es_client.search opts
         end
 
+        def es(query = '', opts = {})
+          call_es { es! query, opts }
+        end
+
+        def call_es
+          yield
+        rescue ::Elasticsearch::Transport::Transport::Errors::NotFound, ::Elasticsearch::Transport::Transport::Error => e
+          db.loggers.first.warn e if db.loggers.count.positive?
+          nil
+        rescue Faraday::ConnectionFailed => e
+          db.loggers.first.warn e if db.loggers.count.positive?
+          nil
+        end
+      end
+
+      module InstanceMethods
         def after_create
           super
-          index_document
+          self.class.call_es { index_document }
         end
 
         def after_destroy
           super
-          destroy_document
+          self.class.call_es { destroy_document }
         end
 
         def after_update
           super
-          index_document
+          self.class.call_es { index_document }
         end
 
         def es_client
-          @es_client = ::Elasticsearch::Client.new self.class.elasticsearch_opts
+          self.class.es_client
         end
 
         private

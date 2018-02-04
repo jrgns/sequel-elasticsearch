@@ -68,8 +68,8 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/jrgns/
 
 Features that needs to be built:
 
-- [ ] Asynchronous workers so that the updates can be processed in the background.
 - [x] An `es` method to search through the data on the cluster.
+- [ ] Let `es` return an enumerator of `Sequel::Model` instances.
 - [ ] A rake task to create or suggest mappings for a table.
 
 ## License
