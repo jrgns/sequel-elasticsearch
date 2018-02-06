@@ -1,4 +1,5 @@
 require 'elasticsearch'
+require 'sequel/plugins/elasticsearch/result'
 
 module Sequel
   module Plugins
@@ -30,12 +31,7 @@ module Sequel
             type: elasticsearch_type
           }.merge(opts)
           query.is_a?(String) ? opts[:q] = query : opts[:body] = query
-          enumerate es_client.search(opts)
-        end
-
-        def enumerate(results)
-          return [] if results['hits']['total'] == 0
-          results['hits']['hits'].map { |h| self.call h['_source'] }
+          Result.new es_client.search(opts)
         end
 
         def es(query = '', opts = {})
