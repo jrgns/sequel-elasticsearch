@@ -10,3 +10,7 @@ rescue LoadError
 end
 
 task default: :spec
+
+desc 'Propose mappings based on a Sequel model'
+task :sequel_mappings do
+end

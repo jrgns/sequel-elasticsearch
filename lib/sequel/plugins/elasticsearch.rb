@@ -1,4 +1,5 @@
 require 'elasticsearch'
+require 'sequel/plugins/elasticsearch/result'
 
 module Sequel
   module Plugins
@@ -30,7 +31,7 @@ module Sequel
             type: elasticsearch_type
           }.merge(opts)
           query.is_a?(String) ? opts[:q] = query : opts[:body] = query
-          es_client.search opts
+          Result.new es_client.search(opts)
         end
 
         def es(query = '', opts = {})

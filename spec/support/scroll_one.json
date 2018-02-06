@@ -1,0 +1,43 @@
+{
+    "_scroll_id": "DnF1ZXJ5VGhlbkZldGNoCgAAAAAAAACLFnpFbXRybktRUndPbnlkQ1BkcUpOR1EAAAAAAAAAkRZ6RW10cm5LUVJ3T255ZENQZHFKTkdRAAAAAAAAAJIWekVtdHJuS1FSd09ueWRDUGRxSk5HUQAAAAAAAACTFnpFbXRybktRUndPbnlkQ1BkcUpOR1EAAAAAAAAAlBZ6RW10cm5LUVJ3T255ZENQZHFKTkdRAAAAAAAAAIwWekVtdHJuS1FSd09ueWRDUGRxSk5HUQAAAAAAAACNFnpFbXRybktRUndPbnlkQ1BkcUpOR1EAAAAAAAAAjhZ6RW10cm5LUVJ3T255ZENQZHFKTkdRAAAAAAAAAI8WekVtdHJuS1FSd09ueWRDUGRxSk5HUQAAAAAAAACQFnpFbXRybktRUndPbnlkQ1BkcUpOR1E=",
+    "_shards": {
+        "failed": 0,
+        "skipped": 0,
+        "successful": 10,
+        "total": 10
+    },
+    "hits": {
+        "hits": [
+            {
+                "_id": "AV-3Skh5ek-DGROVf5Zo",
+                "_index": "logstash-2017.11.13",
+                "_score": 1.0,
+                "_source": {
+                    "@timestamp": "2017-11-13T21:30:19.247Z",
+                    "@version": "1",
+                    "host": "somehost",
+                    "message": "I, [2017-11-13T22:18:01.997727 #5298]  INFO -- : Message 1",
+                    "path": "/home/jrgns/Code/EagerELK/proxes/logs/proxes.log"
+                },
+                "_type": "logs"
+            },
+            {
+                "_id": "AV-3Skh5ek-DGROVf5Zr",
+                "_index": "logstash-2017.11.13",
+                "_score": 1.0,
+                "_source": {
+                    "@timestamp": "2017-11-13T21:30:19.247Z",
+                    "@version": "1",
+                    "host": "somehost",
+                    "message": "I, [2017-11-13T22:18:02.205017 #5298]  INFO -- : Message 2",
+                    "path": "/home/jrgns/Code/EagerELK/proxes/logs/proxes.log"
+                },
+                "_type": "logs"
+            }
+        ],
+        "max_score": 1.0,
+        "total": 5
+    },
+    "timed_out": false,
+    "took": 40
+}

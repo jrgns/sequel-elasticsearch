@@ -86,6 +86,21 @@ describe Sequel::Plugins::Elasticsearch do
         subject.plugin :elasticsearch
         expect { subject.es('test') }.to_not raise_error
       end
+
+      it 'returns an enumerable' do
+        stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
+        subject.plugin :elasticsearch
+        expect(subject.es('test')).to be_a Enumerable
+      end
+
+      it 'handles scroll requests' do
+        stub = stub_request(:get, 'http://localhost:9200/documents/sync/_search?q=test&scroll=1m')
+        subject.plugin :elasticsearch
+        subject.es('test', scroll: '1m')
+        expect(stub).to have_been_requested.once
+      end
+
+      it 'handles scroll results'
     end
 
     context '.es!' do
