@@ -182,7 +182,16 @@ describe Sequel::Plugins::Elasticsearch do
         ).save
         expect(WebMock)
           .to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
-          .with(body: '{"id":' + doc.id.to_s + ',"title":"title","content":"content","views":4,"active":true,"created_at":"2018-02-07T22:18:42+02:00"}')
+          .with(
+            body: {
+              id: doc.id,
+              title: 'title',
+              content: 'content',
+              views: 4,
+              active: true,
+              created_at: '2018-02-07T22:18:42+02:00'
+            }
+          )
       end
     end
 
