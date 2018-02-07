@@ -7,6 +7,9 @@ describe Sequel::Plugins::Elasticsearch do
       primary_key :id
       String :title
       String :content, text: true
+      Integer :views
+      TrueClass :active
+      DateTime :created_at
     end
 
     DB.create_table!(:complex_documents) do
@@ -166,6 +169,20 @@ describe Sequel::Plugins::Elasticsearch do
         doc = simple_doc.new.save
         expect(WebMock)
           .to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
+      end
+
+      it 'correctly formats dates and other types' do
+        stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
+        doc = simple_doc.new(
+          title: 'title',
+          content: 'content',
+          views: 4,
+          active: true,
+          created_at: Time.parse('2018-02-07T22:18:42+02:00')
+        ).save
+        expect(WebMock)
+          .to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
+          .with(body: '{"id":' + doc.id.to_s + ',"title":"title","content":"content","views":4,"active":true,"created_at":"2018-02-07T22:18:42+02:00"}')
       end
     end
 

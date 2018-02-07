@@ -87,7 +87,7 @@ module Sequel
 
         def index_document
           params = document_path
-          params[:body] = values
+          params[:body] = values.each_key { |k| values[k] = values[k].strftime('%FT%T%:z') if values[k].is_a?(Time) }
           es_client.index params
         end
 
