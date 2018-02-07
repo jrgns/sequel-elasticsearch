@@ -24,7 +24,13 @@ Or install it yourself as:
 
 ## Usage
 
-You firstly need an Elasticsearch cluster to sync your data to. By default the gem will try to connect to `http://localhost:9200`. Set the `ELASTICSEARCH_URL` ENV variable to the URL of your cluster.
+Require the gem with:
+
+```ruby
+require 'sequel/plugins/elasticsearch'
+```
+
+You'll need an Elasticsearch cluster to sync your data to. By default the gem will try to connect to `http://localhost:9200`. Set the `ELASTICSEARCH_URL` ENV variable to the URL of your cluster.
 
 This is a Sequel plugin, so you can enable it DB wide:
 
