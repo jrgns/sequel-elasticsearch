@@ -31,7 +31,7 @@ module Sequel
             type: elasticsearch_type
           }.merge(opts)
           query.is_a?(String) ? opts[:q] = query : opts[:body] = query
-          Result.new es_client.search(opts)
+          Result.new es_client.search(opts), self
         end
 
         def es(query = '', opts = {})
