@@ -34,8 +34,14 @@ module Sequel
           Result.new es_client.search(opts), self
         end
 
+        def scroll!(scroll_id, duration)
+          scroll_id = scroll_id.scroll_id if scroll_id.is_a? Result
+          return nil unless scroll_id
+          Result.new es_client.scroll(scroll_id: scroll_id, scroll: duration), self
+        end
+
         def es(query = '', opts = {})
-          call_es { es! query, opts }
+          call_es { query.is_a?(Result) ? scroll!(query, opts) : es!(query, opts) }
         end
 
         def call_es
