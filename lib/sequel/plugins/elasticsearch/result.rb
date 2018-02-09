@@ -4,31 +4,32 @@ module Sequel
       class Result
         include Enumerable
 
-        attr_reader :results, :scroll_id, :total, :took, :timed_out, :model
+        attr_reader :result, :scroll_id, :total, :took, :timed_out, :model
 
-        def initialize(results, model = nil)
-          return unless results && results['hits']
-          @results = results
-          @scroll_id = results['_scroll_id']
-          @total = results['hits']['total']
-          @timed_out = results['timed_out']
-          @took = results['took']
+        def initialize(result, model = nil)
+          return unless result && result['hits']
+
+          @result = result
+          @scroll_id = result['_scroll_id']
+          @total = result['hits']['total']
+          @timed_out = result['timed_out']
+          @took = result['took']
           @model = model
+
+          result['hits']['hits'] = result['hits']['hits'].map { |h| convert(h) }
         end
 
         def each
-          return [] unless results['hits'] && results['hits']['hits']
-          results['hits']['hits'].each do |h|
-            yield convert(h)
-          end
-          # TODO: Use the scroll id to get more if needed
-          # We will need access to the client, somehow...
+          return [] unless result['hits'] && result['hits']['hits'].count.positive?
+          result['hits']['hits'].each { |h| yield h }
         end
 
-        def all
-          results['hits']['hits'].map do |h|
-            convert(h)
-          end
+        def method_missing(m, *args, &block)
+          respond_to_missing?(m) ? result['hits']['hits'].send(m, *args, &block) : super
+        end
+
+        def respond_to_missing?(m, include_private = false)
+          result['hits']['hits'].respond_to?(m, include_private) || super
         end
 
         private
