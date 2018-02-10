@@ -1,5 +1,6 @@
 require 'sequel'
 require 'sequel/plugins/elasticsearch'
+require 'sequel/plugins/elasticsearch/result'
 
 describe Sequel::Plugins::Elasticsearch do
   before(:all) do
@@ -83,9 +84,16 @@ describe Sequel::Plugins::Elasticsearch do
         expect(stub).to have_been_requested.once
       end
 
-      it 'handles exceptions' do
+      it 'handles not found exceptions' do
         stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
           .to_return(status: 404)
+        subject.plugin :elasticsearch
+        expect { subject.es('test') }.to_not raise_error
+      end
+
+      it 'handles connection failed exceptions' do
+        stub_request(:get, %r{http://localhost:9200/documents/sync/_search.*})
+        allow(Faraday::Connection).to receive(:get).and_raise(Faraday::ConnectionFailed)
         subject.plugin :elasticsearch
         expect { subject.es('test') }.to_not raise_error
       end
@@ -112,6 +120,33 @@ describe Sequel::Plugins::Elasticsearch do
           .to_return(status: 500)
         subject.plugin :elasticsearch
         expect { subject.es!('test') }.to raise_error Elasticsearch::Transport::Transport::Error
+      end
+    end
+
+    context '.scroll!' do
+      it 'accepts a scroll_id' do
+        stub = stub_request(:get, 'http://localhost:9200/_search/scroll?scroll%5Bscroll%5D=1m&scroll_id=somescrollid')
+               .to_return(status: 200)
+        subject.plugin :elasticsearch
+        subject.scroll!('somescrollid', scroll: '1m')
+        expect(stub).to have_been_requested.once
+      end
+
+      it 'accepts a Result' do
+        result = Sequel::Plugins::Elasticsearch::Result.new('_scroll_id' => 'somescrollid')
+        allow(result).to receive(:scroll_id).and_return('somescrollid')
+        stub = stub_request(:get, 'http://localhost:9200/_search/scroll?scroll%5Bscroll%5D=1m&scroll_id=somescrollid')
+               .to_return(status: 200)
+        subject.plugin :elasticsearch
+        subject.scroll!(result, scroll: '1m')
+        expect(stub).to have_been_requested.once
+      end
+
+      it 'does not handle exceptions' do
+        stub_request(:get, 'http://localhost:9200/_search/scroll?scroll=1m&scroll_id=somescrollid')
+          .to_return(status: 500)
+        subject.plugin :elasticsearch
+        expect { subject.scroll!('somescrollid', '1m') }.to raise_error Elasticsearch::Transport::Transport::Error
       end
     end
   end
