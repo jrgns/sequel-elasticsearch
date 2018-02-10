@@ -1,7 +1,9 @@
 require 'elasticsearch'
 require 'sequel/plugins/elasticsearch/result'
 
+# Sequel: The Database Toolkit for Ruby
 module Sequel
+  # Sequel Plugins - http://sequel.jeremyevans.net/plugins.html
   module Plugins
     # The Sequel::Elasticsearch model plugin
     #
