@@ -1,7 +1,7 @@
 
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'sequel/plugins/elasticsearch/version'
+require 'sequel/elasticsearch/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'sequel-elasticsearch'

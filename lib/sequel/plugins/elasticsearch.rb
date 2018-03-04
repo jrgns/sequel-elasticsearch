@@ -1,5 +1,6 @@
 require 'elasticsearch'
 require 'sequel/plugins/elasticsearch/result'
+require 'sequel/plugins/elasticsearch/mappings'
 
 # Sequel: The Database Toolkit for Ruby
 module Sequel
