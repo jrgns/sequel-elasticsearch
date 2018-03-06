@@ -26,11 +26,11 @@ module Sequel
           def types
             @types ||= begin
               t = Hash.new(:text)
-              t[:integer] = :integer
-              t[:string] = :keyword
               t[:text] = :text
-              t[:timestamp] = :date
+              t[:string] = :keyword
+              t[:integer] = :integer
               t[:datetime] = :date
+              t[:timestamp] = :date
               t
             end
           end
