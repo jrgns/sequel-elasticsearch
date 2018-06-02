@@ -1,9 +1,9 @@
 sudo: false
 language: ruby
 rvm:
-- 2.3.6
-- 2.4.3
-- 2.5.0
+- 2.3.7
+- 2.4.4
+- 2.5.1
 gemfile: Gemfile.ci
 env:
   global:
