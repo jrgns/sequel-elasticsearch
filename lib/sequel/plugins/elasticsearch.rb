@@ -70,10 +70,9 @@ module Sequel
         # Wrapper method in which error handling is done for Elasticsearch calls.
         def call_es
           yield
-        rescue ::Elasticsearch::Transport::Transport::Errors::NotFound, ::Elasticsearch::Transport::Transport::Error => e
-          db.loggers.first.warn e if db.loggers.count.positive?
-          nil
-        rescue Faraday::ConnectionFailed => e
+        rescue ::Elasticsearch::Transport::Transport::Errors::NotFound,
+               ::Elasticsearch::Transport::Transport::Error,
+               Faraday::ConnectionFailed => e
           db.loggers.first.warn e if db.loggers.count.positive?
           nil
         end

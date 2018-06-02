@@ -13,7 +13,7 @@ describe Sequel::Plugins::Elasticsearch::Result do
       'took' => 234,
       'timed_out' => false,
       'hits' => {
-        'hits' => [ 'one', 'two' ],
+        'hits' => [{ one: 'one', two: 'two' }, { one: 'three', two: 'four' }],
         'total' => 2
       }
     }
@@ -50,13 +50,23 @@ describe Sequel::Plugins::Elasticsearch::Result do
     end
 
     it 'accesses the enumerable elements correctly' do
-      expect(subject).to include 'one'
-      expect(subject).to include 'two'
-      expect(subject).to_not include 'three'
+      expect(subject).to include one: 'one', two: 'two'
+      expect(subject).to include one: 'three', two: 'four'
+      expect(subject).to_not include one: 'five', two: 'six'
     end
 
     it 'reports the size of the hits array correctly' do
       expect(subject.count).to eq result['hits']['hits'].count
+    end
+  end
+
+  context '#method_missing' do
+    let(:subject) do
+      described_class.new(result)
+    end
+
+    it 'sends all methods to the hits array' do
+      expect(subject.count).to eq 2
     end
   end
 
