@@ -189,7 +189,7 @@ describe Sequel::Plugins::Elasticsearch do
     end
 
     context '#indexed_values' do
-      fit 'correctly formats dates and other types' do
+      it 'correctly formats dates and other types' do
         doc = simple_doc.new(
           title: 'title',
           content: 'content',
@@ -202,7 +202,7 @@ describe Sequel::Plugins::Elasticsearch do
           content: "content",
           views: 4,
           active: true,
-          created_at: "2018-02-07T22:18:42+00:00"
+          created_at: "2018-02-07T22:18:42+02:00"
         )
       end
 
