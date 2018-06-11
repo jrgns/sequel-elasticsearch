@@ -188,6 +188,33 @@ describe Sequel::Plugins::Elasticsearch do
       end
     end
 
+    context '#indexed_values' do
+      fit 'correctly formats dates and other types' do
+        doc = simple_doc.new(
+          title: 'title',
+          content: 'content',
+          views: 4,
+          active: true,
+          created_at: Time.parse('2018-02-07T22:18:42+02:00')
+        )
+        expect(doc.send(:indexed_values)).to include(
+          title: "title",
+          content: "content",
+          views: 4,
+          active: true,
+          created_at: "2018-02-07T22:18:42+00:00"
+        )
+      end
+
+      it 'can be extended' do
+        doc = simple_doc.new
+        def doc.indexed_values
+          { test: 'this' }
+        end
+        expect(doc.send(:indexed_values)).to include(test: 'this')
+      end
+    end
+
     context '#document_path' do
       it 'returns the document index, type and id for documents' do
         stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
@@ -204,20 +231,6 @@ describe Sequel::Plugins::Elasticsearch do
         doc = simple_doc.new.save
         expect(WebMock)
           .to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
-      end
-
-      it 'correctly formats dates and other types' do
-        stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
-        doc = simple_doc.new(
-          title: 'title',
-          content: 'content',
-          views: 4,
-          active: true,
-          created_at: Time.parse('2018-02-07T22:18:42+02:00')
-        ).save
-        expect(WebMock)
-          .to have_requested(:put, "http://localhost:9200/#{simple_doc.table_name}/sync/#{doc.id}")
-          .with(body: '{"id":' + doc.id.to_s + ',"title":"title","content":"content","views":4,"active":true,"created_at":"2018-02-07T22:18:42+00:00"}')
       end
     end
 
