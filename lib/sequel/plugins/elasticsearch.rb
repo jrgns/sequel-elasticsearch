@@ -128,8 +128,13 @@ module Sequel
         # Create or update the document on the Elasticsearch cluster.
         def index_document
           params = document_path
-          params[:body] = values.each_key { |k| values[k] = values[k].strftime('%FT%T%:z') if values[k].is_a?(Time) }
+          params[:body] = indexed_values
           es_client.index params
+        end
+
+        # Values to be indexed
+        def indexed_values
+          values.each_key { |k| values[k] = values[k].strftime('%FT%T%:z') if values[k].is_a?(Time) }
         end
 
         # Remove the document from the Elasticsearch cluster.
