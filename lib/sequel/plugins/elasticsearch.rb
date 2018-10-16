@@ -58,6 +58,7 @@ module Sequel
         def scroll!(scroll_id, duration)
           scroll_id = scroll_id.scroll_id if scroll_id.is_a? Result
           return nil unless scroll_id
+
           Result.new es_client.scroll(scroll_id: scroll_id, scroll: duration), self
         end
 
@@ -75,6 +76,10 @@ module Sequel
                Faraday::ConnectionFailed => e
           db.loggers.first.warn e if db.loggers.count.positive?
           nil
+        end
+
+        # Import the whole dataset into Elasticsearch
+        def import!
         end
       end
 
@@ -106,14 +111,20 @@ module Sequel
           self.class.es_client
         end
 
-        private
+        def as_indexed_json
+          indexed_values
+        end
 
-        # Determine the ID to be used for the document in the Elasticsearch cluster.
-        # It will join the values of a multi field primary key with an underscore.
-        def document_id
-          doc_id = pk
-          doc_id = doc_id.join('_') if doc_id.is_a? Array
-          doc_id
+        # Create or update the document on the Elasticsearch cluster.
+        def index_document
+          params = document_path
+          params[:body] = indexed_values
+          es_client.index params
+        end
+
+        # Remove the document from the Elasticsearch cluster.
+        def destroy_document
+          es_client.delete document_path
         end
 
         # Determine the complete path to a document (/index/type/id) in the Elasticsearch cluster.
@@ -125,21 +136,20 @@ module Sequel
           }
         end
 
-        # Create or update the document on the Elasticsearch cluster.
-        def index_document
-          params = document_path
-          params[:body] = indexed_values
-          es_client.index params
+        private
+
+        # Determine the ID to be used for the document in the Elasticsearch cluster.
+        # It will join the values of a multi field primary key with an underscore.
+        def document_id
+          doc_id = pk
+          doc_id = doc_id.join('_') if doc_id.is_a? Array
+          doc_id
         end
 
         # Values to be indexed
         def indexed_values
+          # TODO: Deprecate this method in favour of as_indexed_json
           values.each_key { |k| values[k] = values[k].strftime('%FT%T%:z') if values[k].is_a?(Time) }
-        end
-
-        # Remove the document from the Elasticsearch cluster.
-        def destroy_document
-          es_client.delete document_path
         end
       end
     end

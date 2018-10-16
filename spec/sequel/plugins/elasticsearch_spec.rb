@@ -197,21 +197,21 @@ describe Sequel::Plugins::Elasticsearch do
           active: true,
           created_at: Time.parse('2018-02-07T22:18:42+02:00')
         )
-        expect(doc.send(:indexed_values)).to include(
-          title: "title",
-          content: "content",
+        expect(doc.as_indexed_json).to include(
+          title: 'title',
+          content: 'content',
           views: 4,
           active: true,
-          created_at: "2018-02-07T22:18:42+02:00"
+          created_at: '2018-02-07T22:18:42+02:00'
         )
       end
 
       it 'can be extended' do
         doc = simple_doc.new
-        def doc.indexed_values
+        def doc.as_indexed_json
           { test: 'this' }
         end
-        expect(doc.send(:indexed_values)).to include(test: 'this')
+        expect(doc.as_indexed_json).to include(test: 'this')
       end
     end
 
@@ -219,9 +219,9 @@ describe Sequel::Plugins::Elasticsearch do
       it 'returns the document index, type and id for documents' do
         stub_request(:put, %r{http://localhost:9200/documents/sync/\d+})
         doc = simple_doc.new.save
-        expect(doc.send(:document_path)).to include index: simple_doc.table_name
-        expect(doc.send(:document_path)).to include type: :sync
-        expect(doc.send(:document_path)).to include id: doc.id
+        expect(doc.document_path).to include index: simple_doc.table_name
+        expect(doc.document_path).to include type: :sync
+        expect(doc.document_path).to include id: doc.id
       end
     end
 
