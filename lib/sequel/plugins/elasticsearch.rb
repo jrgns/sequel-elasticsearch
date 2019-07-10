@@ -18,7 +18,7 @@ module Sequel
       def self.apply(model, _opts = OPTS)
         model.instance_variable_set(:@elasticsearch_opts, {})
         model.instance_variable_set(:@elasticsearch_index, nil)
-        model.instance_variable_set(:@elasticsearch_type, 'sync')
+        model.instance_variable_set(:@elasticsearch_type, '_doc')
         model
       end
 
@@ -26,7 +26,7 @@ module Sequel
       def self.configure(model, opts = OPTS)
         model.elasticsearch_opts = opts[:elasticsearch] || {}
         model.elasticsearch_index = (opts[:index] || model.table_name).to_sym
-        model.elasticsearch_type = (opts[:type] || :sync).to_sym
+        model.elasticsearch_type = (opts[:type] || :_doc).to_sym
         model
       end
 
