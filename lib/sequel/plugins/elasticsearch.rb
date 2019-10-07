@@ -97,7 +97,12 @@ module Sequel
           end
 
           # Create an alias to the newly created index
-          es_client.indices.put_alias index: index_name, name: elasticsearch_index
+          es_client.indices.update_aliases body: {
+            actions: [
+              { remove: { index: elasticsearch_index.to_s + '*', alias: elasticsearch_index } },
+              { add: { index: index_name, alias: elasticsearch_index } }
+            ]
+          }
         end
 
         # Generate a timestamped index name according to the environment
