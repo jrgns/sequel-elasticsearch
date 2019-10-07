@@ -89,21 +89,21 @@ module Sequel
         # It's "safe" in that it won't raise an error if it fails.
         def after_create
           super
-          self.class.call_es { index_document }
+          self.class.call_es { _index_document }
         end
 
         # Sequel::Model after_destroy hook to remove the record from the Elasticsearch index.
         # It's "safe" in that it won't raise an error if it fails.
         def after_destroy
           super
-          self.class.call_es { destroy_document }
+          self.class.call_es { _destroy_document }
         end
 
         # Sequel::Model after_update hook to update the record in the Elasticsearch index.
         # It's "safe" in that it won't raise an error if it fails.
         def after_update
           super
-          self.class.call_es { index_document }
+          self.class.call_es { _index_document }
         end
 
         # Return the Elasticsearch client used to communicate with the cluster.
@@ -115,11 +115,23 @@ module Sequel
           indexed_values
         end
 
+        # Internal reference for index_document. Override this for alternate
+        # implementations of indexing the document.
+        def _index_document
+          index_document
+        end
+
         # Create or update the document on the Elasticsearch cluster.
         def index_document
           params = document_path
           params[:body] = indexed_values
           es_client.index params
+        end
+
+        # Internal reference for destroy_document. Override this for alternate
+        # implementations of removing the document.
+        def _destroy_document
+          destroy_document
         end
 
         # Remove the document from the Elasticsearch cluster.

@@ -38,17 +38,18 @@ module Sequel
         # Each implementation for the Enumerable. Yield each element in the +result['hits']['hits']+ array.
         def each
           return [] unless result['hits'] && result['hits']['hits'].count.positive?
+
           result['hits']['hits'].each { |h| yield h }
         end
 
         # Send all undefined methods to the +result['hits']['hits']+ array.
-        def method_missing(m, *args, &block)
-          respond_to_missing?(m) ? result['hits']['hits'].send(m, *args, &block) : super
+        def method_missing(meth, *args, &block)
+          respond_to_missing?(meth) ? result['hits']['hits'].send(meth, *args, &block) : super
         end
 
         # Send all undefined methods to the +result['hits']['hits']+ array.
-        def respond_to_missing?(m, include_private = false)
-          result['hits']['hits'].respond_to?(m, include_private) || super
+        def respond_to_missing?(meth, include_private = false)
+          result['hits']['hits'].respond_to?(meth, include_private) || super
         end
 
         private
@@ -56,6 +57,7 @@ module Sequel
         # Convert an Elasticsearch hit to a Sequel::Model
         def convert(hit)
           return hit unless model
+
           source = hit['_source'].each_with_object({}) { |(k, v), h| h[k.to_sym] = v }
           model.call source
         end
