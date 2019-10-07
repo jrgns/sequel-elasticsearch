@@ -78,8 +78,33 @@ module Sequel
           nil
         end
 
-        # Import the whole dataset into Elasticsearch
-        def import!
+        # Import the whole dataset into Elasticsearch. This assumes that a template
+        # that covers all the possible index names have been created. This will
+        # use the +APP_ENV+ ENV variable and a timestamp to construct index names
+        # like this
+        #
+        #    base-name-staging-20191004.123456 # This is a staging index
+        #    base-name-20191005.171213 # This is a production index
+        #
+        # TODO: Bulk batches
+        def import!(ds: nil, index: nil)
+          ds ||= dataset
+          index_name = index || timestamped_index
+
+          # Index all the documents
+          ds.all.each do |row|
+            row.index_document(index: index_name)
+          end
+
+          # Create an alias to the newly created index
+          es_client.indices.put_alias index: index_name, name: elasticsearch_index
+        end
+
+        # Generate a timestamped index name according to the environment
+        def timestamped_index
+          time_str = Time.now.strftime('%Y%m%d.%H%M%S')
+          env_str = ENV['APP_ENV'] == 'production' ? nil : ENV['APP_ENV']
+          [elasticsearch_index, env_str, time_str].compact.join('-')
         end
       end
 
@@ -117,34 +142,34 @@ module Sequel
 
         # Internal reference for index_document. Override this for alternate
         # implementations of indexing the document.
-        def _index_document
-          index_document
+        def _index_document(opts = {})
+          index_document(opts)
         end
 
         # Create or update the document on the Elasticsearch cluster.
-        def index_document
-          params = document_path
+        def index_document(opts = {})
+          params = document_path(opts)
           params[:body] = indexed_values
           es_client.index params
         end
 
         # Internal reference for destroy_document. Override this for alternate
         # implementations of removing the document.
-        def _destroy_document
-          destroy_document
+        def _destroy_document(opts = {})
+          destroy_document(opts)
         end
 
         # Remove the document from the Elasticsearch cluster.
-        def destroy_document
-          es_client.delete document_path
+        def destroy_document(opts = {})
+          es_client.delete document_path(opts)
         end
 
         # Determine the complete path to a document (/index/type/id) in the Elasticsearch cluster.
-        def document_path
+        def document_path(opts = {})
           {
-            index: self.class.elasticsearch_index,
-            type: self.class.elasticsearch_type,
-            id: document_id
+            index: opts.delete(:index) || self.class.elasticsearch_index,
+            type: opts.delete(:type) || self.class.elasticsearch_type,
+            id: opts.delete(:id) || document_id
           }
         end
 
