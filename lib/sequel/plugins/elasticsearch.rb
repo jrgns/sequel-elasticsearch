@@ -78,34 +78,68 @@ module Sequel
           nil
         end
 
-        # Import the whole dataset into Elasticsearch. This assumes that a template
-        # that covers all the possible index names have been created. This will
-        # use the +APP_ENV+ ENV variable and a timestamp to construct index names
-        # like this
+        # Import the whole dataset into Elasticsearch.
         #
-        #    base-name-staging-20191004.123456 # This is a staging index
-        #    base-name-20191005.171213 # This is a production index
+        # This assumes that a template that covers all the possible index names
+        # have been created. See +timestamped_index+ for examples of the indices
+        # that will be created.
+        #
+        # This adds or updates records to the last index created by this utility.
+        # Use the +reindex!+ method to create a completely new index and alias.
         #
         # TODO: Bulk batches
-        def import!(ds: nil, index: nil)
-          ds ||= dataset
-          index_name = index || timestamped_index
+        def import!(index: nil, dataset: nil)
+          dataset ||= self.dataset
+          index_name = index || last_index
 
           # Index all the documents
-          ds.all.each do |row|
-            row.index_document(index: index_name)
+          body = []
+          dataset.all.each do |row|
+            body << {
+              update: {
+                _index: index_name,
+                _type: elasticsearch_type,
+                _id: row.document_id,
+                data: { doc: row.indexed_values, doc_as_upsert: true }
+              }
+            }
+            next unless body.count >= 100
+
+            es_client.bulk body: body
+            body = []
           end
+          es_client.bulk body: body if body.count.positive?
+        end
+
+        # Creates a new index in Elasticsearch from the specified dataset, as
+        # well as an alias to the new index.
+        #
+        # See the documentation on +import!+ for more details.
+        def reindex!(index: nil, dataset: nil)
+          index_name = index || timestamped_index
+          import!(index: index_name, dataset: dataset)
 
           # Create an alias to the newly created index
           es_client.indices.update_aliases body: {
             actions: [
-              { remove: { index: elasticsearch_index.to_s + '*', alias: elasticsearch_index } },
+              { remove: { index: "#{elasticsearch_index}*", alias: elasticsearch_index } },
               { add: { index: index_name, alias: elasticsearch_index } }
             ]
           }
         end
 
-        # Generate a timestamped index name according to the environment
+        # Find the last created index that matches the specified index name.
+        def last_index
+          es_client.indices.get_alias(name: elasticsearch_index)&.keys&.sort&.first
+        end
+
+        # Generate a timestamped index name according to the environment.
+        # This will use the +APP_ENV+ ENV variable and a timestamp to construct
+        # index names like this:
+        #
+        #    base-name-staging-20191004.123456 # This is a staging index
+        #    base-name-20191005.171213 # This is a production index
+        #
         def timestamped_index
           time_str = Time.now.strftime('%Y%m%d.%H%M%S')
           env_str = ENV['APP_ENV'] == 'production' ? nil : ENV['APP_ENV']
@@ -178,8 +212,6 @@ module Sequel
           }
         end
 
-        private
-
         # Determine the ID to be used for the document in the Elasticsearch cluster.
         # It will join the values of a multi field primary key with an underscore.
         def document_id
@@ -187,6 +219,8 @@ module Sequel
           doc_id = doc_id.join('_') if doc_id.is_a? Array
           doc_id
         end
+
+        private
 
         # Values to be indexed
         def indexed_values
