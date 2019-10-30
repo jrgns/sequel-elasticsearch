@@ -86,9 +86,7 @@ module Sequel
         #
         # This adds or updates records to the last index created by this utility.
         # Use the +reindex!+ method to create a completely new index and alias.
-        #
-        # TODO: Bulk batches
-        def import!(index: nil, dataset: nil)
+        def import!(index: nil, dataset: nil, batch_size: 100)
           dataset ||= self.dataset
           index_name = index || last_index
 
@@ -103,7 +101,9 @@ module Sequel
                 data: { doc: row.indexed_values, doc_as_upsert: true }
               }
             }
-            next unless body.count >= 100
+            print '.'
+            next unless body.count >= batch_size
+            puts '/'
 
             es_client.bulk body: body
             body = []
@@ -115,15 +115,19 @@ module Sequel
         # well as an alias to the new index.
         #
         # See the documentation on +import!+ for more details.
-        def reindex!(index: nil, dataset: nil)
+        def reindex!(index: nil, dataset: nil, batch_size: 100)
           index_name = index || timestamped_index
-          import!(index: index_name, dataset: dataset)
+          import!(index: index_name, dataset: dataset, batch_size: batch_size)
 
           # Create an alias to the newly created index
+          alias_index(index_name)
+        end
+
+        def alias_index(new_index)
           es_client.indices.update_aliases body: {
             actions: [
               { remove: { index: "#{elasticsearch_index}*", alias: elasticsearch_index } },
-              { add: { index: index_name, alias: elasticsearch_index } }
+              { add: { index: new_index, alias: elasticsearch_index } }
             ]
           }
         end
