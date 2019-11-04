@@ -105,6 +105,22 @@ while (scroll = Document.es(scroll, scroll: '1m')) && scroll.empty? == false do
 end
 ```
 
+### Import
+
+You can import the whole dataset, or specify a dataset to be imported. This will create a new, timestamped index for your dataset, and import all the records from that dataset into the index. An alias will be created (or updated) to point to the newly created index.
+
+```ruby
+Document.import! # Import all the Document records. Use the default settings.
+
+Document.import!(dataset: Document.where(active: true)) # Import all the active Document records
+
+Document.import!(
+    index: 'active-documents', # Use the active-documents index
+    dataset: Document.where(active: true), # Only index active documents
+    batch_size: 20 # Send documents to Elasticsearch in batches of 20 records
+)
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
