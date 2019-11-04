@@ -92,23 +92,23 @@ module Sequel
 
           # Index all the documents
           body = []
-          dataset.all.each do |row|
-            body << {
-              update: {
-                _index: index_name,
-                _type: elasticsearch_type,
-                _id: row.document_id,
-                data: { doc: row.indexed_values, doc_as_upsert: true }
-              }
-            }
-            print '.'
-            next unless body.count >= batch_size
-            puts '/'
-
-            es_client.bulk body: body
+          dataset.each_page(batch_size) do |ds|
             body = []
+            ds.all.each do |row|
+              print '.'
+              body << {
+                update: {
+                  _index: index_name,
+                  _type: elasticsearch_type,
+                  _id: row.document_id,
+                  data: { doc: row.indexed_values, doc_as_upsert: true }
+                }
+              }
+            end
+            puts '/'
+            es_client.bulk body: body
+            body = nil
           end
-          es_client.bulk body: body if body.count.positive?
         end
 
         # Creates a new index in Elasticsearch from the specified dataset, as
