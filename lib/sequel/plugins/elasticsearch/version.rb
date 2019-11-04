@@ -4,6 +4,6 @@ module Sequel
   # See https://jrgns.github.io/sequel-elasticsearch
   module Elasticsearch
     # The Gem's version.
-    VERSION = '0.4.7'.freeze
+    VERSION = '0.4.8'.freeze
   end
 end
