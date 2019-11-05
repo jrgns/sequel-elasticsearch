@@ -16,17 +16,21 @@ module Sequel
     module Elasticsearch
       # Apply the plugin to the specified model
       def self.apply(model, _opts = OPTS)
-        model.instance_variable_set(:@elasticsearch_opts, {})
-        model.instance_variable_set(:@elasticsearch_index, nil)
-        model.instance_variable_set(:@elasticsearch_type, '_doc')
         model
       end
 
       # Configure the plugin
       def self.configure(model, opts = OPTS)
+        environment_scoped = if opts[:environment_scoped].nil?
+                               model.environment != 'test'
+                             else
+                               opts[:environment_scoped]
+                             end
+
         model.elasticsearch_opts = opts[:elasticsearch] || {}
         model.elasticsearch_index = (opts[:index] || model.table_name).to_sym
         model.elasticsearch_type = (opts[:type] || :_doc).to_sym
+        model.elasticsearch_environment_scoped = environment_scoped
         model
       end
 
@@ -38,6 +42,8 @@ module Sequel
         attr_writer :elasticsearch_index
         # The Elasticsearch type to which the documents will be written.
         attr_accessor :elasticsearch_type
+        # If generated indices should include the environment name
+        attr_accessor :elasticsearch_environment_scoped
 
         # Return the Elasticsearch client used to communicate with the cluster.
         def es_client
@@ -138,27 +144,40 @@ module Sequel
         end
 
         def elasticsearch_index
-          return @elasticsearch_index if ENV['APP_ENV'] == 'production'
-          return @elasticsearch_index if @elasticsearch_index.to_s.end_with?(ENV['APP_ENV'])
+          return @elasticsearch_index unless elasticsearch_environment_scoped
 
-          "#{@elasticsearch_index}-#{ENV['APP_ENV']}"
+          "#{@elasticsearch_index}-#{environment}".to_sym
         end
 
         # Generate a timestamped index name according to the environment.
-        # This will use the +APP_ENV+ ENV variable and a timestamp to construct
-        # index names like this:
+        # This will use the +APP_ENV+ or +RACK_ENV+ ENV variable and a timestamp
+        # to construct index names like this:
         #
         #    base-name-staging-20191004.123456 # This is a staging index
-        #    base-name-20191005.171213 # This is a production index
+        #    base-name-production-20191005.171213 # This is a production index
         #
+        # The adding of the environment name to the index can be turned off by
+        # setting +elasticsearch_environment_scoped+ to false.
         def timestamped_index
           time_str = Time.now.strftime('%Y%m%d.%H%M%S')
-          "#{elasticsearch_index}-#{time_str}"
+          "#{elasticsearch_index}-#{time_str}".to_sym
+        end
+
+        def environment
+          ENV['APP_ENV'] || ENV['RACK_ENV'] || 'development'
         end
       end
 
       # The instance methods that will be added to the Sequel::Model
       module InstanceMethods
+        def elasticsearch_index
+          self.class.elasticsearch_index
+        end
+
+        def elasticsearch_type
+          self.class.elasticsearch_type
+        end
+
         # Sequel::Model after_create hook to add the new record to the Elasticsearch index.
         # It's "safe" in that it won't raise an error if it fails.
         def after_create
@@ -216,8 +235,8 @@ module Sequel
         # Determine the complete path to a document (/index/type/id) in the Elasticsearch cluster.
         def document_path(opts = {})
           {
-            index: opts.delete(:index) || self.class.elasticsearch_index,
-            type: opts.delete(:type) || self.class.elasticsearch_type,
+            index: opts.delete(:index) || elasticsearch_index,
+            type: opts.delete(:type) || elasticsearch_type,
             id: opts.delete(:id) || document_id
           }
         end

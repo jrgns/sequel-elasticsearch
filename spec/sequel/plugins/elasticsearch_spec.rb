@@ -40,6 +40,16 @@ describe Sequel::Plugins::Elasticsearch do
       expect(model.elasticsearch_index).to eq :customIndex
     end
 
+    it 'includes the environment if specfied to include it' do
+      model.plugin :elasticsearch, environment_scoped: true
+      expect(model.elasticsearch_index).to eq :'documents-test'
+    end
+
+    it 'excludes the environment if specfied to exclude it' do
+      model.plugin :elasticsearch, environment_scoped: false
+      expect(model.elasticsearch_index).to eq :'documents'
+    end
+
     it 'uses the specified index' do
       model.plugin :elasticsearch, index: :customIndex
       stub_request(:put, %r{http://localhost:9200/customIndex/_doc/\d+})
