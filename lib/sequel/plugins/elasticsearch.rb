@@ -35,7 +35,7 @@ module Sequel
         # The extra options that will be passed to the Elasticsearch client.
         attr_accessor :elasticsearch_opts
         # The Elasticsearch index to which the documents will be written.
-        attr_accessor :elasticsearch_index
+        attr_writer :elasticsearch_index
         # The Elasticsearch type to which the documents will be written.
         attr_accessor :elasticsearch_type
 
@@ -137,6 +137,13 @@ module Sequel
           es_client.indices.get_alias(name: elasticsearch_index)&.keys&.sort&.first
         end
 
+        def elasticsearch_index
+          return @elasticsearch_index if ENV['APP_ENV'] == 'production'
+          return @elasticsearch_index if @elasticsearch_index.to_s.end_with?(ENV['APP_ENV'])
+
+          "#{@elasticsearch_index}-#{ENV['APP_ENV']}"
+        end
+
         # Generate a timestamped index name according to the environment.
         # This will use the +APP_ENV+ ENV variable and a timestamp to construct
         # index names like this:
@@ -146,8 +153,7 @@ module Sequel
         #
         def timestamped_index
           time_str = Time.now.strftime('%Y%m%d.%H%M%S')
-          env_str = ENV['APP_ENV'] == 'production' ? nil : ENV['APP_ENV']
-          [elasticsearch_index, env_str, time_str].compact.join('-')
+          "#{elasticsearch_index}-#{time_str}"
         end
       end
 
