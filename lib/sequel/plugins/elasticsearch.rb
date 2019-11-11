@@ -21,16 +21,9 @@ module Sequel
 
       # Configure the plugin
       def self.configure(model, opts = OPTS)
-        environment_scoped = if opts[:environment_scoped].nil?
-                               model.environment != 'test'
-                             else
-                               opts[:environment_scoped]
-                             end
-
         model.elasticsearch_opts = opts[:elasticsearch] || {}
         model.elasticsearch_index = (opts[:index] || model.table_name).to_sym
         model.elasticsearch_type = (opts[:type] || :_doc).to_sym
-        model.elasticsearch_environment_scoped = environment_scoped
         model
       end
 
@@ -39,11 +32,9 @@ module Sequel
         # The extra options that will be passed to the Elasticsearch client.
         attr_accessor :elasticsearch_opts
         # The Elasticsearch index to which the documents will be written.
-        attr_writer :elasticsearch_index
+        attr_accessor :elasticsearch_index
         # The Elasticsearch type to which the documents will be written.
         attr_accessor :elasticsearch_type
-        # If generated indices should include the environment name
-        attr_accessor :elasticsearch_environment_scoped
 
         # Return the Elasticsearch client used to communicate with the cluster.
         def es_client
@@ -129,6 +120,7 @@ module Sequel
           alias_index(index_name)
         end
 
+        # Remove previous aliases and point the `elasticsearch_index` to the new index.
         def alias_index(new_index)
           es_client.indices.update_aliases body: {
             actions: [
@@ -143,28 +135,13 @@ module Sequel
           es_client.indices.get_alias(name: elasticsearch_index)&.keys&.sort&.first
         end
 
-        def elasticsearch_index
-          return @elasticsearch_index unless elasticsearch_environment_scoped
-
-          "#{@elasticsearch_index}-#{environment}".to_sym
-        end
-
-        # Generate a timestamped index name according to the environment.
-        # This will use the +APP_ENV+ or +RACK_ENV+ ENV variable and a timestamp
-        # to construct index names like this:
+        # Generate a timestamped index name.
+        # This will use the current timestamp to construct index names like this:
         #
-        #    base-name-staging-20191004.123456 # This is a staging index
-        #    base-name-production-20191005.171213 # This is a production index
-        #
-        # The adding of the environment name to the index can be turned off by
-        # setting +elasticsearch_environment_scoped+ to false.
+        #    base-name-20191004.123456
         def timestamped_index
-          time_str = Time.now.strftime('%Y%m%d.%H%M%S')
+          time_str = Time.now.strftime('%Y%m%d.%H%M%S') # TODO: Make the format configurable
           "#{elasticsearch_index}-#{time_str}".to_sym
-        end
-
-        def environment
-          ENV['APP_ENV'] || ENV['RACK_ENV'] || 'development'
         end
       end
 
