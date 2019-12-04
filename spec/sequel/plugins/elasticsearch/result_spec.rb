@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 require 'sequel'
 require 'elasticsearch'
@@ -21,7 +23,7 @@ describe Sequel::Plugins::Elasticsearch::Result do
 
   let(:scroll_result) { result.merge('_scroll_id' => '123scrollid') }
 
-  context '.new' do
+  describe '.new' do
     let(:subject) do
       described_class.new(result)
     end
@@ -31,28 +33,28 @@ describe Sequel::Plugins::Elasticsearch::Result do
     end
 
     it 'handles an empty result' do
-      expect { described_class.new(nil) }.to_not raise_error
+      expect { described_class.new(nil) }.not_to raise_error
     end
 
     it 'sets the result total property' do
-      expect(subject.total).to_not be nil
+      expect(subject.total).not_to be nil
       expect(subject.total).to eq result['hits']['total']
     end
 
     it 'sets the result timed_out property' do
-      expect(subject.timed_out).to_not be nil
+      expect(subject.timed_out).not_to be nil
       expect(subject.timed_out).to eq result['timed_out']
     end
 
     it 'sets the result took property' do
-      expect(subject.took).to_not be nil
+      expect(subject.took).not_to be nil
       expect(subject.took).to eq result['took']
     end
 
     it 'accesses the enumerable elements correctly' do
       expect(subject).to include one: 'one', two: 'two'
       expect(subject).to include one: 'three', two: 'four'
-      expect(subject).to_not include one: 'five', two: 'six'
+      expect(subject).not_to include one: 'five', two: 'six'
     end
 
     it 'reports the size of the hits array correctly' do
@@ -60,7 +62,7 @@ describe Sequel::Plugins::Elasticsearch::Result do
     end
   end
 
-  context '#method_missing' do
+  describe '#method_missing' do
     let(:subject) do
       described_class.new(result)
     end
@@ -76,7 +78,7 @@ describe Sequel::Plugins::Elasticsearch::Result do
     end
 
     it 'sets the result scroll_id property' do
-      expect(subject.scroll_id).to_not be nil
+      expect(subject.scroll_id).not_to be nil
       expect(subject.scroll_id).to eq scroll_result['_scroll_id']
     end
 

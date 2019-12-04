@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 ENV['RACK_ENV'] ||= 'test'
 ENV['DATABASE_URL'] ||= 'sqlite::memory:'
 ENV['ELASTICSEARCH_URL'] ||= 'http://localhost:9200'

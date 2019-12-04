@@ -1,5 +1,6 @@
+# frozen_string_literal: true
 
-lib = File.expand_path('../lib', __FILE__)
+lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'sequel/plugins/elasticsearch/version'
 
@@ -27,8 +28,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler', '>= 1.13'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'rubocop', '~> 0.52'
+  spec.add_development_dependency 'rubocop', '>= 0.52'
+  spec.add_development_dependency 'rubocop-rspec', '>= 1.37'
   spec.add_development_dependency 'simplecov', '~> 0.15'
-  spec.add_development_dependency 'webmock', '~> 3.2'
   spec.add_development_dependency 'sqlite3', '~> 1.4'
+  spec.add_development_dependency 'webmock', '~> 3.2'
 end
