@@ -22,7 +22,7 @@ module Sequel
       # Configure the plugin
       def self.configure(model, opts = OPTS)
         model.elasticsearch_opts = opts[:elasticsearch] || {}
-        model.elasticsearch_index = (opts[:index] || model.table_name).to_sym
+        model.elasticsearch_index = (opts[:index] || model.table_name.to_s.downcase).to_sym
         model.elasticsearch_type = (opts[:type] || :_doc).to_sym
         model
       end
@@ -85,7 +85,7 @@ module Sequel
         # Use the +reindex!+ method to create a completely new index and alias.
         def import!(index: nil, dataset: nil, batch_size: 100)
           dataset ||= self.dataset
-          index_name = index || last_index
+          index_name = index || last_index || elasticsearch_index
 
           # Index all the documents
           body = []
@@ -98,7 +98,7 @@ module Sequel
                   _index: index_name,
                   _type: elasticsearch_type,
                   _id: row.document_id,
-                  data: { doc: row.indexed_values, doc_as_upsert: true }
+                  data: { doc: row.as_indexed_json, doc_as_upsert: true }
                 }
               }
             end
@@ -133,6 +133,8 @@ module Sequel
         # Find the last created index that matches the specified index name.
         def last_index
           es_client.indices.get_alias(name: elasticsearch_index)&.keys&.sort&.first
+        rescue ::Elasticsearch::Transport::Transport::Errors::NotFound
+          nil
         end
 
         # Generate a timestamped index name.
@@ -181,6 +183,8 @@ module Sequel
           self.class.es_client
         end
 
+        # Mirror the Elasticsearch Rails plugin. Use this to override what data
+        # is sent to Elasticsearch
         def as_indexed_json
           indexed_values
         end
@@ -194,7 +198,7 @@ module Sequel
         # Create or update the document on the Elasticsearch cluster.
         def index_document(opts = {})
           params = document_path(opts)
-          params[:body] = indexed_values
+          params[:body] = as_indexed_json
           es_client.index params
         end
 
