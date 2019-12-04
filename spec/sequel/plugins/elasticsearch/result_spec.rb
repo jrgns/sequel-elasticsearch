@@ -24,12 +24,12 @@ describe Sequel::Plugins::Elasticsearch::Result do
   let(:scroll_result) { result.merge('_scroll_id' => '123scrollid') }
 
   describe '.new' do
-    let(:subject) do
+    let(:es_result) do
       described_class.new(result)
     end
 
     it 'creates an enumerable' do
-      expect(subject).to be_a Enumerable
+      expect(es_result).to be_a Enumerable
     end
 
     it 'handles an empty result' do
@@ -37,49 +37,49 @@ describe Sequel::Plugins::Elasticsearch::Result do
     end
 
     it 'sets the result total property' do
-      expect(subject.total).not_to be nil
-      expect(subject.total).to eq result['hits']['total']
+      expect(es_result.total).not_to be nil
+      expect(es_result.total).to eq result['hits']['total']
     end
 
     it 'sets the result timed_out property' do
-      expect(subject.timed_out).not_to be nil
-      expect(subject.timed_out).to eq result['timed_out']
+      expect(es_result.timed_out).not_to be nil
+      expect(es_result.timed_out).to eq result['timed_out']
     end
 
     it 'sets the result took property' do
-      expect(subject.took).not_to be nil
-      expect(subject.took).to eq result['took']
+      expect(es_result.took).not_to be nil
+      expect(es_result.took).to eq result['took']
     end
 
     it 'accesses the enumerable elements correctly' do
-      expect(subject).to include one: 'one', two: 'two'
-      expect(subject).to include one: 'three', two: 'four'
-      expect(subject).not_to include one: 'five', two: 'six'
+      expect(es_result).to include one: 'one', two: 'two'
+      expect(es_result).to include one: 'three', two: 'four'
+      expect(es_result).not_to include one: 'five', two: 'six'
     end
 
     it 'reports the size of the hits array correctly' do
-      expect(subject.count).to eq result['hits']['hits'].count
+      expect(es_result.count).to eq result['hits']['hits'].count
     end
   end
 
   describe '#method_missing' do
-    let(:subject) do
+    let(:es_result) do
       described_class.new(result)
     end
 
     it 'sends all methods to the hits array' do
-      expect(subject.count).to eq 2
+      expect(es_result.count).to eq 2
     end
   end
 
   context 'scrollable' do
-    let(:subject) do
+    let(:es_result) do
       described_class.new(scroll_result)
     end
 
     it 'sets the result scroll_id property' do
-      expect(subject.scroll_id).not_to be nil
-      expect(subject.scroll_id).to eq scroll_result['_scroll_id']
+      expect(es_result.scroll_id).not_to be nil
+      expect(es_result.scroll_id).to eq scroll_result['_scroll_id']
     end
 
     it 'iterates through the whole result set' do
