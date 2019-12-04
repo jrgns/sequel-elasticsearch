@@ -3,6 +3,7 @@
 require 'sequel'
 require 'sequel/plugins/elasticsearch'
 require 'sequel/plugins/elasticsearch/result'
+require 'timecop'
 
 # rubocop: disable Metrics/BlockLength
 describe Sequel::Plugins::Elasticsearch do
@@ -152,6 +153,15 @@ describe Sequel::Plugins::Elasticsearch do
         expect { model.scroll!('somescrollid', '1m') }.to raise_error Elasticsearch::Transport::Transport::Error
       end
     end
+
+    describe '.timestamped_index' do
+      it 'returns the index appended with a timestamp' do
+        model.plugin :elasticsearch
+        Timecop.freeze(Time.local(2019, 12, 4, 21, 26, 12)) do
+          expect(model.timestamped_index).to eq :'documents-20191204.212612'
+        end
+      end
+    end
   end
 
   describe 'InstanceMethods' do
@@ -191,7 +201,7 @@ describe Sequel::Plugins::Elasticsearch do
       end
     end
 
-    describe '#indexed_values' do
+    describe '#as_indexed_json' do
       let(:doc) do
         simple_doc.new(
           title: 'title',
