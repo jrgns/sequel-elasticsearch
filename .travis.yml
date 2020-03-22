@@ -1,19 +1,18 @@
 sudo: false
 language: ruby
 rvm:
-- 2.3
 - 2.4
 - 2.5
 - 2.6
+- 2.7
 gemfile: Gemfile.ci
 env:
   global:
   - CC_TEST_REPORTER_ID=f35fd15664b071c621a239733eb3b063caf333ac7e795d3a20690942f64caf62
 before_install:
-- gem install bundler -v 1.13.6
+- gem install bundler
 before_script:
-- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
-  > ./cc-test-reporter
+- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
 - chmod +x ./cc-test-reporter
 - "./cc-test-reporter before-build"
 - export TZ=Africa/Johannesburg
