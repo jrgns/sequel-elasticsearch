@@ -129,7 +129,7 @@ describe Sequel::Plugins::Elasticsearch do
 
     describe '.scroll!' do
       it 'accepts a scroll_id' do
-        stub = stub_request(:get, 'http://localhost:9200/_search/scroll?scroll%5Bscroll%5D=1m&scroll_id=somescrollid')
+        stub = stub_request(:get, 'http://localhost:9200/_search/scroll/somescrollid?scroll%5Bscroll%5D=1m')
                .to_return(status: 200)
         model.plugin :elasticsearch
         model.scroll!('somescrollid', scroll: '1m')
@@ -139,7 +139,7 @@ describe Sequel::Plugins::Elasticsearch do
       it 'accepts a Result' do
         result = Sequel::Plugins::Elasticsearch::Result.new('_scroll_id' => 'somescrollid')
         allow(result).to receive(:scroll_id).and_return('somescrollid')
-        stub = stub_request(:get, 'http://localhost:9200/_search/scroll?scroll%5Bscroll%5D=1m&scroll_id=somescrollid')
+        stub = stub_request(:get, 'http://localhost:9200/_search/scroll/somescrollid?scroll%5Bscroll%5D=1m')
                .to_return(status: 200)
         model.plugin :elasticsearch
         model.scroll!(result, scroll: '1m')
@@ -147,7 +147,7 @@ describe Sequel::Plugins::Elasticsearch do
       end
 
       it 'does not handle exceptions' do
-        stub_request(:get, 'http://localhost:9200/_search/scroll?scroll=1m&scroll_id=somescrollid')
+        stub_request(:get, 'http://localhost:9200/_search/scroll/somescrollid?scroll=1m')
           .to_return(status: 500)
         model.plugin :elasticsearch
         expect { model.scroll!('somescrollid', '1m') }.to raise_error Elasticsearch::Transport::Transport::Error
