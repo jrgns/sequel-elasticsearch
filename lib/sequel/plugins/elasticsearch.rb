@@ -25,7 +25,7 @@ module Sequel
       def self.configure(model, opts = OPTS)
         model.elasticsearch_opts = opts[:elasticsearch] || {}
         model.elasticsearch_index = (opts[:index] || model.table_name.to_s.downcase).to_sym
-        model.elasticsearch_type = (opts[:type] || :_doc).to_sym
+        model.elasticsearch_type = opts[:type]&.to_sym
         model
       end
 
@@ -95,19 +95,22 @@ module Sequel
             body = []
             ds.all.each do |row|
               print '.'
-              body << {
-                update: {
-                  _index: index_name,
-                  _type: elasticsearch_type,
-                  _id: row.document_id,
-                  data: { doc: row.as_indexed_json, doc_as_upsert: true }
-                }
-              }
+              body << { update: import_object(index_name, row) }
             end
             puts '/'
             es_client.bulk body: body
             body = nil
           end
+        end
+
+        def import_object(idx, row)
+          val = {
+            _index: idx,
+            _id: row.document_id,
+            data: { doc: row.as_indexed_json, doc_as_upsert: true }
+          }
+          val[:_type] = elasticsearch_type if elasticsearch_type
+          val
         end
 
         # Creates a new index in Elasticsearch from the specified dataset, as

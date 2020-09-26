@@ -62,6 +62,12 @@ Sequel::Model.plugin :elasticsearch,
 
 And that's it! Just transact as you normally would, and your records will be created and updated in the Elasticsearch cluster.
 
+### Indexing
+
+Ensure that you create the [index mappings](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html) for your data before using this plugin, otherwise you might get some weird results.
+
+The records will by default be indexed using the `values` call of the model. Should you need to customize what's indexed, you can define a `indexed_values` method (or `as_indexed_json` method if you prefer the Rails way).
+
 ### Searching
 
 Your model is now searchable through Elasticsearch. Just pass down a string that's parsable as a [query string query](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html).
