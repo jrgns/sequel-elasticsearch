@@ -44,6 +44,11 @@ module Sequel
           result['hits']['hits'].each { |h| yield h }
         end
 
+        # Send back the complete result set
+        def all
+          result['hits']['hits']
+        end
+
         # Send all undefined methods to the +result['hits']['hits']+ array.
         def method_missing(meth, *args, &block)
           respond_to_missing?(meth) ? result['hits']['hits'].send(meth, *args, &block) : super
