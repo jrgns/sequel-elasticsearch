@@ -48,9 +48,9 @@ describe Sequel::Plugins::Elasticsearch do
       expect(WebMock).to have_requested(:put, "http://localhost:9200/customIndex/_doc/#{doc.id}")
     end
 
-    it 'defaults to `_doc` for the type' do
+    it 'only uses type if given' do
       model.plugin :elasticsearch
-      expect(model.send(:elasticsearch_type)).to eq :_doc
+      expect(model.send(:elasticsearch_type)).to be_nil
     end
 
     it 'allows you to specify the type' do
@@ -60,9 +60,16 @@ describe Sequel::Plugins::Elasticsearch do
 
     it 'uses the specified type' do
       model.plugin :elasticsearch, type: :customType
-      stub_request(:put, %r{http://localhost:9200/#{model.table_name}/customType/\d+})
+      WebMock.allow_net_connect!
       doc = model.new.save
       expect(WebMock).to have_requested(:put, "http://localhost:9200/#{model.table_name}/customType/#{doc.id}")
+    end
+
+    it 'uses the default type' do
+      model.plugin :elasticsearch
+      WebMock.allow_net_connect!
+      doc = model.new(content: Time.now).save
+      expect(WebMock).to have_requested(:put, "http://localhost:9200/#{model.table_name}/_doc/#{doc.id}")
     end
 
     it 'allows you to pass down Elasticsearch client options' do
@@ -73,44 +80,42 @@ describe Sequel::Plugins::Elasticsearch do
 
   describe 'ClassMethods' do
     describe '.es' do
-      it 'does a basic query string search' do
-        stub_request(:get, %r{http://localhost:9200/documents/_doc/_search.*})
+      before do
+        WebMock.allow_net_connect!
         model.plugin :elasticsearch
+      end
+
+      it 'does a basic query string search' do
         model.es('test')
-        expect(WebMock).to have_requested(:get, 'http://localhost:9200/documents/_doc/_search?q=test')
+        expect(WebMock).to have_requested(:get, 'http://localhost:9200/documents/_search?q=test')
       end
 
       it 'does a complex query search' do
-        stub = stub_request(:get, 'http://localhost:9200/documents/_doc/_search')
-               .with(body: '{"query":{"match":{"title":"test"}}}')
-        model.plugin :elasticsearch
         model.es(query: { match: { title: 'test' } })
-        expect(stub).to have_been_requested.once
+        expect(WebMock)
+          .to have_requested(:get, 'http://localhost:9200/documents/_search')
+          .with(body: '{"query":{"match":{"title":"test"}}}')
       end
 
       it 'handles not found exceptions' do
-        stub_request(:get, %r{http://localhost:9200/documents/_doc/_search.*})
-          .to_return(status: 404)
-        model.plugin :elasticsearch
         expect { model.es('test') }.not_to raise_error
+        stub_request(:get, %r{http://localhost:9200/documents/_search.*})
+          .to_return(status: 404)
       end
 
       it 'handles connection failed exceptions' do
-        stub_request(:get, %r{http://localhost:9200/documents/_doc/_search.*})
+        stub_request(:get, %r{http://localhost:9200/documents/_search.*})
         allow(Faraday::Connection).to receive(:get).and_raise(Faraday::ConnectionFailed)
-        model.plugin :elasticsearch
         expect { model.es('test') }.not_to raise_error
       end
 
       it 'returns an enumerable' do
-        stub_request(:get, %r{http://localhost:9200/documents/_doc/_search.*})
-        model.plugin :elasticsearch
+        stub_request(:get, %r{http://localhost:9200/documents/_search.*})
         expect(model.es('test')).to be_a Enumerable
       end
 
       it 'handles scroll requests' do
-        stub = stub_request(:get, 'http://localhost:9200/documents/_doc/_search?q=test&scroll=1m')
-        model.plugin :elasticsearch
+        stub = stub_request(:get, 'http://localhost:9200/documents/_search?q=test&scroll=1m')
         model.es('test', scroll: '1m')
         expect(stub).to have_been_requested.once
       end
@@ -120,7 +125,7 @@ describe Sequel::Plugins::Elasticsearch do
 
     describe '.es!' do
       it 'does not handle exceptions' do
-        stub_request(:get, %r{http://localhost:9200/documents/_doc/_search.*})
+        stub_request(:get, %r{http://localhost:9200/documents/_search.*})
           .to_return(status: 500)
         model.plugin :elasticsearch
         expect { model.es!('test') }.to raise_error Elasticsearch::Transport::Transport::Error
@@ -128,10 +133,13 @@ describe Sequel::Plugins::Elasticsearch do
     end
 
     describe '.scroll!' do
-      it 'accepts a scroll_id' do
-        stub = stub_request(:get, 'http://localhost:9200/_search/scroll/somescrollid?scroll%5Bscroll%5D=1m')
-               .to_return(status: 200)
+      before do
         model.plugin :elasticsearch
+      end
+
+      it 'accepts a scroll_id' do
+        stub = stub_request(:get, 'http://localhost:9200/_search/scroll?scroll%5Bscroll%5D=1m&scroll_id=somescrollid')
+
         model.scroll!('somescrollid', scroll: '1m')
         expect(stub).to have_been_requested.once
       end
@@ -139,18 +147,18 @@ describe Sequel::Plugins::Elasticsearch do
       it 'accepts a Result' do
         result = Sequel::Plugins::Elasticsearch::Result.new('_scroll_id' => 'somescrollid')
         allow(result).to receive(:scroll_id).and_return('somescrollid')
-        stub = stub_request(:get, 'http://localhost:9200/_search/scroll/somescrollid?scroll%5Bscroll%5D=1m')
+        stub = stub_request(:get, 'http://localhost:9200/_search/scroll?scroll%5Bscroll%5D=1m&scroll_id=somescrollid')
                .to_return(status: 200)
-        model.plugin :elasticsearch
+
         model.scroll!(result, scroll: '1m')
+
         expect(stub).to have_been_requested.once
       end
 
       it 'does not handle exceptions' do
-        stub_request(:get, 'http://localhost:9200/_search/scroll/somescrollid?scroll=1m')
+        stub_request(:get, 'http://localhost:9200/_search/scroll?scroll=1m&scroll_id=somescrollid')
           .to_return(status: 500)
-        model.plugin :elasticsearch
-        expect { model.scroll!('somescrollid', '1m') }.to raise_error Elasticsearch::Transport::Transport::Error
+        expect { model.scroll!('somescrollid', '1m') }.to raise_error Elasticsearch::Transport::Transport::Error # Getting Faraday::ConnectionFailed ??
       end
     end
 
@@ -232,7 +240,6 @@ describe Sequel::Plugins::Elasticsearch do
         stub_request(:put, %r{http://localhost:9200/documents/_doc/\d+})
         doc = simple_doc.new.save
         expect(doc.document_path).to include index: simple_doc.table_name
-        expect(doc.document_path).to include type: :_doc
         expect(doc.document_path).to include id: doc.id
       end
     end
