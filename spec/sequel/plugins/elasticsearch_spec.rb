@@ -93,7 +93,7 @@ describe Sequel::Plugins::Elasticsearch do
       it 'does a complex query search' do
         model.es(query: { match: { title: 'test' } })
         expect(WebMock)
-          .to have_requested(:get, 'http://localhost:9200/documents/_search')
+          .to have_requested(:post, 'http://localhost:9200/documents/_search')
           .with(body: '{"query":{"match":{"title":"test"}}}')
       end
 
