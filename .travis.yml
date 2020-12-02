@@ -1,4 +1,6 @@
-sudo: false
+os:
+  - linux
+dist: xenial
 services:
   - elasticsearch
 language: ruby
