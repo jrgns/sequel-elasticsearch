@@ -58,7 +58,7 @@ module Sequel
           scroll_id = scroll_id.scroll_id if scroll_id.is_a? Result
           return nil unless scroll_id
 
-          Result.new es_client.scroll(scroll_id: scroll_id, scroll: duration), self
+          Result.new es_client.scroll(body: scroll_id, scroll: duration), self
         end
 
         # Execute a search or a scroll on the Model's Elasticsearch index.
